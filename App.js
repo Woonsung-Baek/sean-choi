@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from 'react';
+import React, {useState, useEffect, useCallback} from 'react';
 import {
   SafeAreaView,
   Text,
@@ -8,6 +8,8 @@ import {
   TextInput,
   ScrollView,
   Button,
+  Alert,
+  Linking,
 } from 'react-native';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import {NavigationContainer} from '@react-navigation/native';
@@ -31,14 +33,56 @@ const App = () => {
   );
 };
 
-const PreferencesScreen = ({navigation}) => {
+const PreferencesScreen = ({route, navigation}) => {
+  const [foodCandidates, setFoodCandidates] = useState([]);
+  const foodByPurpose = {
+    Any: [
+      'Beef',
+      'Chicken',
+      'Pork',
+      'Fish',
+      'Turkey',
+      'Sushi',
+      'Pasta',
+      'Bulgogi',
+      'Dumpling',
+      'Noodles',
+      'Cake',
+      'Shrimp',
+      'Burger',
+      'Pizza',
+      'Bacon',
+      'Soup',
+    ],
+    Diet: [
+      'Leafy Greens',
+      'Salad',
+      'Yogurt',
+      'Cereal',
+      'Fruits',
+      'Oatmeal',
+      'Beans',
+    ],
+    Growth: ['Beef', 'Chicken', 'Pork', 'Fish', 'Turkey'],
+    Bulk: ['Beef', 'Chicken', 'Pork', 'Fish', 'Turkey', 'Tofu'],
+  };
   const [purpose, setPurpose] = useState(null);
   const [eatenFoods, setEatenFoods] = useState([]);
   useEffect(() => {
-    if (eatenFoods.length >= 5) {
-      navigation.navigate('MyPage');
+    if (purpose) {
+      let temp = foodCandidates.concat(foodByPurpose[purpose]);
+      setFoodCandidates(temp);
     }
-  });
+  }, [purpose]);
+  useEffect(() => {
+    if (eatenFoods.length >= 5) {
+      let temp = foodCandidates.concat(eatenFoods);
+      setFoodCandidates(temp);
+      var item =
+        foodCandidates[Math.floor(Math.random() * foodCandidates.length)];
+      navigation.navigate('MyPage', {food: item});
+    }
+  }, [eatenFoods]);
   return (
     <SafeAreaView
       style={{
@@ -353,7 +397,9 @@ const ChatBox = ({text, width, color, textColor, left}) => {
   );
 };
 
-const MyPageScreen = () => {
+const MyPageScreen = ({route}) => {
+  const {food} = route.params;
+  var foodName = JSON.stringify(food).replace(/['"]+/g, '');
   return (
     <SafeAreaView
       style={{
@@ -378,10 +424,12 @@ const MyPageScreen = () => {
         </Text>
       </View>
       <Image
-        source={require('./images/pizza.png')}
+        source={require('./images/Pizza.png')}
         style={{
           resizeMode: 'contain',
+          margin: 50,
           width: 350,
+          height: 350,
         }}
       />
       <Text
@@ -389,34 +437,34 @@ const MyPageScreen = () => {
           fontSize: 50,
           fontWeight: 'bold',
         }}>
-        Pizza
+        {foodName}
       </Text>
     </SafeAreaView>
   );
 };
 
 const HomeScreen = ({navigation}) => {
+  const [showAds, setShowAds] = useState(true);
+  const buttonPress = useCallback(async () => {
+    // Checking if the link is supported for links with custom URL scheme.
+    const supported = await Linking.canOpenURL('https://www.grammarly.com/');
+
+    if (supported) {
+      // Opening the link with some app, if the URL scheme is "http" the web link should be opened
+      // by some browser in the mobile
+      await Linking.openURL('https://www.grammarly.com/');
+    } else {
+      Alert.alert(
+        `Don't know how to open this URL: https://www.grammarly.com/`,
+      );
+    }
+  });
   return (
     <SafeAreaView
       style={{
         flex: 1,
         alignItems: 'center',
       }}>
-      <TouchableOpacity
-        style={{
-          position: 'absolute',
-          top: 50,
-          right: 30,
-        }}>
-        <Image
-          source={require('./images/calendar.png')}
-          style={{
-            resizeMode: 'contain',
-            width: 50,
-            height: 50,
-          }}
-        />
-      </TouchableOpacity>
       <View
         style={{
           flex: 0.4,
@@ -448,6 +496,7 @@ const HomeScreen = ({navigation}) => {
           borderWidth: 20,
           justifyContent: 'center',
           alignItems: 'center',
+          zIndex: 2,
         }}
         onPress={() => navigation.navigate('Preferences')}>
         <Text
@@ -458,6 +507,63 @@ const HomeScreen = ({navigation}) => {
           {`Preferences\n(Click to Enter)`}
         </Text>
       </TouchableOpacity>
+      {showAds && (
+        <TouchableOpacity
+          style={{
+            top: 30,
+            width: '80%',
+            height: 150,
+            justifyContent: 'center',
+            alignItems: 'center',
+            zIndex: 1,
+          }}
+          onPress={buttonPress}>
+          <Image
+            source={require('./images/ads.png')}
+            style={{
+              resizeMode: 'contain',
+              width: '100%',
+            }}
+          />
+          <View
+            style={{
+              width: 30,
+              height: 20,
+              position: 'absolute',
+              top: 10,
+              left: 10,
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}>
+            <Text
+              style={{
+                fontWeight: 'bold',
+                fontSize: 15,
+              }}>
+              Ads
+            </Text>
+          </View>
+          <TouchableOpacity
+            style={{
+              width: 30,
+              height: 30,
+              position: 'absolute',
+              top: 10,
+              right: 10,
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+            onPress={() => setShowAds(false)}>
+            <Image
+              source={require('./images/cross.png')}
+              style={{
+                resizeMode: 'contain',
+                width: 30,
+              }}
+            />
+          </TouchableOpacity>
+        </TouchableOpacity>
+      )}
     </SafeAreaView>
   );
 };
