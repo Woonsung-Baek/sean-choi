@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import {NavigationContainer} from '@react-navigation/native';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 
 const Tab = createBottomTabNavigator();
 
@@ -20,11 +21,25 @@ const App = () => {
   return (
     <NavigationContainer>
       <Tab.Navigator
-        screenOptions={{
+        screenOptions={({route}) => ({
+          tabBarIcon: ({focused, color, size}) => {
+            let iconName;
+
+            if (route.name === 'Home') {
+              iconName = focused ? 'home' : 'home-outline';
+            } else if (route.name === 'MyPage') {
+              iconName = focused ? 'list' : 'list-outline';
+            } else if (route.name === 'Preferences') {
+              iconName = focused ? 'cog' : 'cog-outline';
+            }
+
+            // You can return any component that you like here!
+            return <Ionicons name={iconName} size={size} color={color} />;
+          },
           headerShown: false,
           tabBarActiveTintColor: 'tomato',
           tabBarInactiveTintColor: 'gray',
-        }}>
+        })}>
         <Tab.Screen name="Home" component={HomeScreen} />
         <Tab.Screen name="Preferences" component={PreferencesScreen} />
         <Tab.Screen name="MyPage" component={MyPageScreen} />
@@ -54,20 +69,19 @@ const PreferencesScreen = ({route, navigation}) => {
       'Bacon',
       'Soup',
     ],
-    Diet: [
-      'Leafy Greens',
-      'Salad',
-      'Yogurt',
-      'Cereal',
-      'Fruits',
-      'Oatmeal',
-      'Beans',
-    ],
+    Diet: ['Salad', 'Yogurt', 'Cereal', 'Fruits', 'Oatmeal', 'Beans'],
     Growth: ['Beef', 'Chicken', 'Pork', 'Fish', 'Turkey'],
     Bulk: ['Beef', 'Chicken', 'Pork', 'Fish', 'Turkey', 'Tofu'],
   };
   const [purpose, setPurpose] = useState(null);
   const [eatenFoods, setEatenFoods] = useState([]);
+  useEffect(() => {
+    if (route.params?.retry === true) {
+      console.log('hi');
+      setPurpose(null);
+      setEatenFoods([]);
+    }
+  }, [route.params]);
   useEffect(() => {
     if (purpose) {
       let temp = foodCandidates.concat(foodByPurpose[purpose]);
@@ -88,26 +102,50 @@ const PreferencesScreen = ({route, navigation}) => {
       style={{
         flex: 1,
       }}>
+      <TouchableOpacity
+        onPress={() => navigation.goBack()}
+        style={{
+          top: 45,
+          width: 50,
+          height: 50,
+          alignItems: 'center',
+          justifyContent: 'center',
+          position: 'absolute',
+          zIndex: 3,
+        }}>
+        <Image
+          source={require('./images/back.png')}
+          style={{
+            resizeMode: 'contain',
+            width: 100,
+          }}
+        />
+      </TouchableOpacity>
       <View
         style={{
           height: 50,
+          flex: 0.5,
           backgroundColor: '#FF730E',
           width: '100%',
+          flexDirection: 'row',
           justifyContent: 'center',
+          alignItems: 'center',
         }}>
-        <TouchableOpacity
-          onPress={() => navigation.goBack()}
+        <Image
+          source={require('./images/robot.png')}
           style={{
-            width: '10%',
+            height: 30,
+            width: 30,
+          }}
+        />
+        <Text
+          style={{
+            fontSize: 20,
+            fontWeight: '600',
+            color: 'black',
           }}>
-          <Image
-            source={require('./images/back.png')}
-            style={{
-              resizeMode: 'contain',
-              width: 100,
-            }}
-          />
-        </TouchableOpacity>
+          {`  BOT`}
+        </Text>
       </View>
       <View
         style={{
@@ -397,9 +435,36 @@ const ChatBox = ({text, width, color, textColor, left}) => {
   );
 };
 
-const MyPageScreen = ({route}) => {
-  const {food} = route.params;
+const MyPageScreen = ({route, navigation}) => {
+  const path = {
+    TBD: require('./images/TBD.png'),
+    Beef: require('./images/Beef.png'),
+    Chicken: require('./images/Chicken.png'),
+    Pork: require('./images/Pork.png'),
+    Fish: require('./images/Fish.png'),
+    Turkey: require('./images/Turkey.png'),
+    Sushi: require('./images/Sushi.png'),
+    Pasta: require('./images/Pasta.png'),
+    Bulgogi: require('./images/Bulgogi.png'),
+    Dumpling: require('./images/Dumpling.png'),
+    Noodles: require('./images/Noodles.png'),
+    Cake: require('./images/Cake.png'),
+    Shrimp: require('./images/Shrimp.png'),
+    Burger: require('./images/Burger.png'),
+    Pizza: require('./images/Pizza.png'),
+    Bacon: require('./images/Bacon.png'),
+    Soup: require('./images/Soup.png'),
+    Salad: require('./images/Salad.png'),
+    Yogurt: require('./images/Yogurt.png'),
+    Cereal: require('./images/Cereal.png'),
+    Fruits: require('./images/Fruits.png'),
+    Oatmeal: require('./images/Oatmeal.png'),
+    Beans: require('./images/Beans.png'),
+    Tofu: require('./images/Tofu.png'),
+  };
+  const food = route.params?.food ?? 'TBD';
   var foodName = JSON.stringify(food).replace(/['"]+/g, '');
+  var foodImagePath = path[foodName] ?? require('./images/TBD.png');
   return (
     <SafeAreaView
       style={{
@@ -409,6 +474,7 @@ const MyPageScreen = ({route}) => {
       <View
         style={{
           top: 30,
+          bottom: 30,
           backgroundColor: '#FF730E',
           height: 60,
           width: '80%',
@@ -424,10 +490,9 @@ const MyPageScreen = ({route}) => {
         </Text>
       </View>
       <Image
-        source={require('./images/Pizza.png')}
+        source={foodImagePath}
         style={{
           resizeMode: 'contain',
-          margin: 50,
           width: 350,
           height: 350,
         }}
@@ -436,9 +501,33 @@ const MyPageScreen = ({route}) => {
         style={{
           fontSize: 50,
           fontWeight: 'bold',
+          textAlign: 'center',
         }}>
         {foodName}
       </Text>
+      <TouchableOpacity
+        style={{
+          top: 50,
+          height: 150,
+          width: 150,
+          backgroundColor: '#FF730E',
+          borderRadius: 100,
+          borderColor: '#FFC599',
+          borderWidth: 20,
+          justifyContent: 'center',
+          alignItems: 'center',
+          zIndex: 2,
+        }}
+        onPress={() => navigation.navigate('Preferences', {retry: true})}>
+        <Text
+          style={{
+            fontSize: 20,
+            fontWeight: 'bold',
+            textAlign: 'center',
+          }}>
+          {`RETRY`}
+        </Text>
+      </TouchableOpacity>
     </SafeAreaView>
   );
 };
@@ -503,6 +592,7 @@ const HomeScreen = ({navigation}) => {
           style={{
             fontSize: 20,
             fontWeight: 'bold',
+            textAlign: 'center',
           }}>
           {`Preferences\n(Click to Enter)`}
         </Text>
@@ -521,8 +611,8 @@ const HomeScreen = ({navigation}) => {
           <Image
             source={require('./images/ads.png')}
             style={{
-              resizeMode: 'contain',
               width: '100%',
+              height: '100%',
             }}
           />
           <View
